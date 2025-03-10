@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/include/c++/11/"
+                "/usr/include/c++/11/",
+                "/usr/include/opencv4/"
 
             ],
             "defines": [],
