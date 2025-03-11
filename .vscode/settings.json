@@ -62,7 +62,15 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "eigen": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "__locale": "cpp",
+        "__bit_reference": "cpp",
+        "__hash_table": "cpp",
+        "__node_handle": "cpp",
+        "__split_buffer": "cpp",
+        "__tree": "cpp",
+        "__verbose_abort": "cpp",
+        "ios": "cpp"
     },
     "workbench.colorCustomizations": {
         "activityBar.background": "#372C1B",
