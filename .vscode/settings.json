@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.cpp": "cpp",
         "array": "cpp",
         "atomic": "cpp",
         "bit": "cpp",
@@ -62,11 +63,25 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "eigen": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "__locale": "cpp",
+        "__bit_reference": "cpp",
+        "__hash_table": "cpp",
+        "__node_handle": "cpp",
+        "__split_buffer": "cpp",
+        "__tree": "cpp",
+        "__verbose_abort": "cpp",
+        "ios": "cpp",
+        "bitset": "cpp",
+        "__threading_support": "cpp",
+        "locale": "cpp",
+        "print": "cpp"
     },
     "workbench.colorCustomizations": {
         "activityBar.background": "#372C1B",
         "titleBar.activeBackground": "#4D3E25",
         "titleBar.activeForeground": "#FCFBF9"
-    }
+    },
+    // "C_Cpp.intelliSenseCacheSize": 4096, // 增加缓存容量
+    // "C_Cpp.autocompleteDelay": 200 // 降低补全延迟
 }
