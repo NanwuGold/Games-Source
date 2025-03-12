@@ -1,7 +1,10 @@
 #include <chrono>
 #include <iostream>
 #include <vector>
+#include <cmath>
+#include <numeric>
 #include <opencv2/opencv.hpp>
+#include "Combination.hpp"
 
 std::vector<cv::Point2f> control_points;
 
@@ -39,37 +42,27 @@ void naive_bezier(const std::vector<cv::Point2f> &points, cv::Mat &window)
     }
 }
 
-#if 0
-cv::Point2f recursive_bezier(const std::vector<cv::Point2f> &control_points, float t) 
+/**
+ * @brief De Casteljau’s Algorithm 递归实现
+ * @param control_points 控制点
+ * @param t
+ * @return cv::Point2f t对应的插值的点
+ */
+cv::Point2f recursive_bezier_recursive(const std::vector<cv::Point2f> &control_points, float t)
 {
-    // TODO: Implement de Casteljau's algorithm
-    if(control_points.size() == 1) return control_points.back();
+    if (control_points.size() == 1)
+    {
+        return control_points.back();
+    }
 
     std::vector<cv::Point2f> newControlPoint;
-    for(auto i = 0; i+1 < control_points.size(); i++)
+    for (auto i = 0; i + 1 < control_points.size(); i++)
     {
-        auto newPoint = control_points[i] + t * (control_points[i +1] - control_points[i]);
+        auto newPoint = control_points[i] + t * (control_points[i + 1] - control_points[i]);
         newControlPoint.emplace_back(std::move(newPoint));
     }
 
-    return recursive_bezier(newControlPoint, t);
-}
-#else
-
-/**
- * @brief 计算阶乘的函数
- * @param n 计算阶乘的数据
- * @return decltype(n) 计算的结果
- * @note 递归的计算方式
- */
-auto factorial(int n) -> decltype(n)
-{
-    if (n == 0)
-    {
-        return 1;
-    }
-
-    return n * factorial(n - 1);
+    return recursive_bezier_recursive(newControlPoint, t);
 }
 
 cv::Point2f recursive_bezier(const std::vector<cv::Point2f> &control_points, float t)
@@ -78,70 +71,89 @@ cv::Point2f recursive_bezier(const std::vector<cv::Point2f> &control_points, flo
     cv::Point2f newPoint{0.0f, 0.0f};
     for (auto i = 0; i <= n; i++)
     {
-        newPoint += control_points[i] * factorial(n) / static_cast<float>(factorial(n - i) * factorial(i)) *
-                   std::pow(t, i) * std::pow(1 - t, n - i);
+        newPoint += control_points[i] * Combination()(n, i) *
+                    std::pow(t, i) * std::pow(1 - t, n - i);
     }
 
     return newPoint;
 }
-#endif
+
+/**
+ * @brief De Casteljau’s Algorithm 实现
+ *
+ * @param control_points
+ * @param t
+ * @return cv::Point2f
+ */
+cv::Point2f recursive_bezier_loop(const std::vector<cv::Point2f> &control_points, float t)
+{
+    auto temp = std::vector<cv::Point2f>{control_points};
+
+    for (auto i = 1; i < temp.size(); i++)
+    {
+        for (auto j = 0; j < temp.size() - 1; j++)
+        {
+            temp[j] = temp[j] + t * (temp[j + 1] - temp[j]);
+        }
+    }
+    return temp[0];
+}
 
 void bezier(const std::vector<cv::Point2f> &control_points, cv::Mat &window)
 {
+    auto width = window.cols;
+    auto height = window.rows;
+
     for (double t = 0.0; t <= 1.0; t += 0.001)
     {
-        auto point = recursive_bezier(control_points, t);
+        auto point = recursive_bezier_loop(control_points, t);
 
-        /// BGR
-        window.at<cv::Vec3b>(point.y, point.x)[1] = 255;
+        /// 计算最近的像素
+        auto x = std::trunc(point.x);
+        auto y = std::trunc(point.y);
+        window.at<cv::Vec3b>(point.y, point.x)[1] = 255; /// 颜色使用 BGR的顺序
 
-#if 0
-        /// do AA
-        /// pixel center
-        auto x = static_cast<uint32_t>(point.x);
-        auto y = static_cast<uint32_t>(point.y);
+        cv::Point2f center(x + 0.5, y + 0.5);
+        float d_0 = std::sqrt(std::pow(center.x - x, 2) + std::pow(center.y - y, 2));
 
-        float centerX = x + 0.5f;
-        float centerY = y + 0.5f;
-
-        auto center = cv::Point2f(centerX, centerY);
-        // dir
-        cv::Point2f dir = center - point;
-        auto length = std::sqrt(dir.dot(dir));
-
-        dir = dir / length; /// normalized
-
-        /// pixel in the  way
-        auto nearPixel = cv::Point2f(centerX, centerY) + cv::Point2f(1.0, 1.0);
-        cv::Vec3b color = cv::Vec3b(0, 255, 0) * length + cv::Vec3b(0, 0, 0) * (1 - length);
-
-        window.at<cv::Vec3b>(nearPixel.y, nearPixel.x) = color;
-
-        /// project to x
-        if (dir.x > 0.0f)
+        /// 获取周围的3*3的9个像素
+        std::vector<cv::Point2f> pixels;
+        std::vector<float> weight;
+        for (int dy = 0; dy <= 1; dy++)
         {
-            auto xDir = cv::Point2f{dir.x, 0.0f};
-            length = dir.dot(xDir);
+            for (int dx = 0; dx <= 1; dx++)
+            {
+                auto px = x + dx;
+                auto py = y + dy;
 
-            xDir = xDir / std::abs(dir.x);
-            auto nearPixel_x = center + xDir;
+                if (px < 0 || px > width || py < 0 || py >= height)
+                {
+                    continue;
+                }
 
-            color = cv::Vec3b(0, 255, 0) * length + cv::Vec3b(0, 0, 0) * (1.0 - length);
-            window.at<cv::Vec3b>(nearPixel_x.y, nearPixel_x.x) = color;
+                float offsetx = point.x - (px + 0.5f);
+                float offsety = point.y - (py + 0.5f);
+                auto disPoint = cv::Point2f(offsetx, offsety);
+                auto dis = std::sqrt(disPoint.dot(disPoint));
+
+                weight.emplace_back(dis);
+                pixels.emplace_back(cv::Point2f{px, py});
+            }
         }
-        /// project to y
-        if (dir.y > 0.0f)
+
+        float sum_w = std::accumulate(weight.begin(), weight.end(), 0.0f) / d_0;
+        for (auto i = 0; i < pixels.size(); i++)
         {
-            auto yDir = cv::Point2f{0.0, dir.y};
-            length = dir.dot(yDir);
-
-            yDir = yDir / std::abs(dir.y);
-            auto nearPixel_y = center + yDir;
-
-            color = cv::Vec3b(0, 255, 0) * length + cv::Vec3b(0, 0, 0) * (1.0 - length);
-            window.at<cv::Vec3b>(nearPixel_y.y, nearPixel_y.x) = color;
+            cv::Vec3b &pixel = window.at<cv::Vec3b>(pixels[i].y, pixels[i].x);
+            auto wi = weight[i] / d_0 / sum_w;
+            float color = pixel[1];
+            pixel[1] = (1 - wi) * color + 255.0f * wi;
         }
-#endif
+
+        /// TODO:: 或许可以在线条完全生成完之在考虑抗锯齿
+        /// 根据实际的效果来看, FXAA是一个更好的思路与方法，上述抗锯齿方案无法实际考虑生成的线的梯度变化，只能单纯的对周围的像素进行着色：
+        /// 1. 在线比较弯曲的情况，这种会产生较好的效果。
+        /// 2. 在线导数为0的时候，并不是我们期待的效果。
     }
 }
 
@@ -174,7 +186,6 @@ int main()
             // cv::imshow("Bezier Curve", window);
             // cv::imwrite("my_bezier_curve.png", window);
             // key = cv::waitKey(0);
-
             // return 0;
         }
 
