@@ -17,13 +17,25 @@
             "MIMode": "gdb"
         },
         {
-            "name": "RayTracing",
+            "name": "RayTracing-H5",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/Games101/HW5/RayTracing",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/Games101/HW5/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        },
+        {
+            "name": "RayTracing-H6",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Games101/HW6/RayTracing",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/Games101/HW6/",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb"
