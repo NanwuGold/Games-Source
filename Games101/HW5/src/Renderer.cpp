@@ -98,7 +98,7 @@ std::optional<hit_payload> trace(
             payload->tNear = tNearK;
             payload->index = indexK;
             payload->uv = uvK;
-            tNear = tNearK;
+            tNear = tNearK;   /// 找到最近的交点
         }
     }
 
@@ -130,7 +130,7 @@ Vector3f castRay(
     }
 
     Vector3f hitColor = scene.backgroundColor;
-    if (auto payload = trace(orig, dir, scene.get_objects()); payload)
+    if (auto payload = trace(orig, dir, scene.get_objects()); payload)  /// 求交点计算
     {
         Vector3f hitPoint = orig + dir * payload->tNear;
         Vector3f N; // normal
@@ -223,14 +223,23 @@ void Renderer::Render(const Scene& scene)
         for (int i = 0; i < scene.width; ++i)
         {
             // generate primary ray direction
-            float x;
-            float y;
-            // TODO: Find the x and y positions of the current pixel to get the direction
-            // vector that passes through it.
-            // Also, don't forget to multiply both of them with the variable *scale*, and
-            // x (horizontal) variable with the *imageAspectRatio*            
+            float x = i + 0.5f;
+            float y = j + 0.5f;
 
-            Vector3f dir = Vector3f(x, y, -1); // Don't forget to normalize this direction!
+            /// transform to NDC
+            auto Xndc = x / scene.width;
+            Xndc = Xndc * 2.0f - 1.0f;
+
+            auto Yndc = y / scene.height;
+            Yndc = 1.0f - Yndc * 2.0f;   ///< Y 的方向是相反的  所以 映射到 [1.0, -1.0]
+
+            float Xcamera = Xndc * imageAspectRatio * scale;
+            float Ycamera = Yndc * scale;
+
+            x = Xcamera;
+            y = Ycamera;
+
+            Vector3f dir = normalize(Vector3f(x, y, -1));
             framebuffer[m++] = castRay(eye_pos, dir, scene, 0);
         }
         UpdateProgress(j / (float)scene.height);
@@ -246,5 +255,5 @@ void Renderer::Render(const Scene& scene)
         color[2] = (char)(255 * clamp(0, 1, framebuffer[i].z));
         fwrite(color, 1, 3, fp);
     }
-    fclose(fp);    
+    fclose(fp);
 }

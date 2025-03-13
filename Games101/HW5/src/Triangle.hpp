@@ -7,10 +7,36 @@
 bool rayTriangleIntersect(const Vector3f& v0, const Vector3f& v1, const Vector3f& v2, const Vector3f& orig,
                           const Vector3f& dir, float& tnear, float& u, float& v)
 {
-    // TODO: Implement this function that tests whether the triangle
-    // that's specified bt v0, v1 and v2 intersects with the ray (whose
-    // origin is *orig* and direction is *dir*)
-    // Also don't forget to update tnear, u and v.
+    auto S = orig - v0;
+
+    auto E_1 = v1 - v0;
+    auto E_2 = v2 - v0;
+
+    auto S_1 = crossProduct(dir, E_2);
+    auto S_2 = crossProduct(S, E_1);
+
+    auto det = dotProduct(S_1, E_1);
+
+    if(std::fabs(det) < 1e-6)
+    {
+        return false;
+    }
+
+    auto w = 1.0f / det;
+
+    auto t = w * dotProduct(S_2, E_2);
+    auto b1 = w * dotProduct(S_1, S);
+    auto b2 = w * dotProduct(S_2, dir);
+
+    if(b1 > 0.0f && b2 > 0.0f && (1.0f - b1 - b2) >= 0.0f && t >= 0.0f)
+    {
+        tnear = t;
+        u = b1;
+        v = b2;
+
+        return true;
+    }
+
     return false;
 }
 
@@ -45,10 +71,10 @@ public:
             float t, u, v;
             if (rayTriangleIntersect(v0, v1, v2, orig, dir, t, u, v) && t < tnear)
             {
-                tnear = t;
-                uv.x = u;
-                uv.y = v;
-                index = k;
+                tnear = t;   /// 当前此求交的最近的交点
+                uv.x = u;    /// 重心坐标 u
+                uv.y = v;    /// 重心坐标 v
+                index = k;   /// 当前是第几个三角形
                 intersect |= true;
             }
         }
