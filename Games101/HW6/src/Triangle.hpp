@@ -212,30 +212,47 @@ inline Intersection Triangle::getIntersection(Ray ray)
 {
     Intersection inter;
 
+    /// 光线与平面平行
     if (dotProduct(ray.direction, normal) > 0)
+    {
         return inter;
+    }
+
     double u, v, t_tmp = 0;
-    Vector3f pvec = crossProduct(ray.direction, e2);
+    Vector3f pvec = crossProduct(ray.direction, e2);  /// vec s1
     double det = dotProduct(e1, pvec);
     if (fabs(det) < EPSILON)
+    {
         return inter;
+    }
 
-    double det_inv = 1. / det;
-    Vector3f tvec = ray.origin - v0;
-    u = dotProduct(tvec, pvec) * det_inv;
-    if (u < 0 || u > 1)
+    double det_inv = 1.0f / det;
+    Vector3f tvec = ray.origin - v0;  /// vec s
+    u = dotProduct(pvec, tvec) * det_inv;
+    if (u < 0.0f || u > 1.0f)
+    {
         return inter;
-    Vector3f qvec = crossProduct(tvec, e1);
-    v = dotProduct(ray.direction, qvec) * det_inv;
-    if (v < 0 || u + v > 1)
+    }
+    Vector3f qvec = crossProduct(tvec, e1);  /// vec s2
+    v = dotProduct(qvec, ray.direction) * det_inv;
+    if (v < 0.0f || u + v > 1.0f)
+    {
         return inter;
-    t_tmp = dotProduct(e2, qvec) * det_inv;
+    }
+    t_tmp = dotProduct(qvec, e2) * det_inv;
 
     // TODO find ray triangle intersection
+    if (t_tmp > 0.0f)
+    {
+        inter.happened = true;
+        inter.coords = ray.origin + t_tmp * ray.direction;
+        inter.normal = this->normal;
+        inter.distance = t_tmp;
+        inter.obj = this;
+        inter.m = m;
 
-
-
-
+        return inter;
+    }
     return inter;
 }
 

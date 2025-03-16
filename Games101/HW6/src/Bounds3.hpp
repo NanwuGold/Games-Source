@@ -93,10 +93,57 @@ class Bounds3
 inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
                                 const std::array<int, 3>& dirIsNeg) const
 {
-    // invDir: ray direction(x,y,z), invDir=(1.0/x,1.0/y,1.0/z), use this because Multiply is faster that Division
-    // dirIsNeg: ray direction(x,y,z), dirIsNeg=[int(x>0),int(y>0),int(z>0)], use this to simplify your logic
-    // TODO test if ray bound intersects
-    
+    if (!dotProduct(ray.direction, ray.direction))
+    {
+        return false;
+    }
+    /// 光线求交计算 
+    Vector3f enterVec;
+    Vector3f exitVec;
+
+    /// BVH构建的加速结构的包围盒是一个轴对齐包围盒，意味着面的法线就是对应的坐标轴
+    /// 计算的时候进行逻辑简化，只需要单独计算某个维度，并不需要计算面的法线，并计算与线的交点, 通过法线计算面与线的交点这种计算会拖慢求交的效率
+    const auto& origin = ray.origin;
+    const auto& direction = ray.direction;
+    {
+        enterVec.x = (pMin.x - origin.x) * ray.direction_inv.x;
+        exitVec.x = (pMax.x - origin.x) * ray.direction_inv.x;
+
+        if (!dirIsNeg[0])
+        {
+            std::swap(enterVec.x, exitVec.x);
+        }
+    }
+
+    {
+        enterVec.y = (pMin.y - origin.y) * ray.direction_inv.y;
+        exitVec.y = (pMax.y - origin.y) * ray.direction_inv.y;
+
+        if (!dirIsNeg[1])
+        {
+            std::swap(enterVec.y, exitVec.y);
+        }
+    }
+
+    {
+        enterVec.z = (pMin.z - origin.z) * ray.direction_inv.z;
+        exitVec.z = (pMax.z - origin.z) * ray.direction_inv.z;
+
+        if (!dirIsNeg[2])
+        {
+            std::swap(enterVec.z, exitVec.z);
+        }
+
+    }
+    auto enter = std::max(std::max(enterVec.x, enterVec.y), enterVec.z);
+    auto exit  = std::min(std::min(exitVec.x, exitVec.y), exitVec.z);
+
+    if (enter < exit && exit > 0.0f)
+    {
+        return true;
+    }
+
+    return false;
 }
 
 inline Bounds3 Union(const Bounds3& b1, const Bounds3& b2)

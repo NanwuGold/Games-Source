@@ -7,4 +7,6 @@ add_executable(RayTracing main.cpp Object.hpp Vector.cpp Vector.hpp Sphere.hpp g
         Scene.hpp Light.hpp AreaLight.hpp BVH.cpp BVH.hpp Bounds3.hpp Ray.hpp Material.hpp Intersection.hpp
         Renderer.cpp Renderer.hpp)
 
-set(CMAKE_BUILD_TYPE "Debug")
+# set(CMAKE_BUILD_TYPE "Debug")
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/models/  DESTINATION ${CMAKE_BINARY_DIR}/models/)

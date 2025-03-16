@@ -5,6 +5,7 @@
 #include <fstream>
 #include "Scene.hpp"
 #include "Renderer.hpp"
+#include <vector>
 
 
 inline float deg2rad(const float& deg) { return deg * M_PI / 180.0; }
@@ -22,26 +23,26 @@ void Renderer::Render(const Scene& scene)
     float imageAspectRatio = scene.width / (float)scene.height;
     Vector3f eye_pos(-1, 5, 10);
     int m = 0;
-    for (uint32_t j = 0; j < scene.height; ++j) {
-        for (uint32_t i = 0; i < scene.width; ++i) {
+    for (uint32_t j = 0; j < scene.height; ++j) 
+    {
+        for (uint32_t i = 0; i < scene.width; ++i) 
+        {
             // generate primary ray direction
-            float x = (2 * (i + 0.5) / (float)scene.width - 1) *
-                      imageAspectRatio * scale;
-            float y = (1 - 2 * (j + 0.5) / (float)scene.height) * scale;
-            // TODO: Find the x and y positions of the current pixel to get the
-            // direction
-            //  vector that passes through it.
-            // Also, don't forget to multiply both of them with the variable
-            // *scale*, and x (horizontal) variable with the *imageAspectRatio*
-
-            // Don't forget to normalize this direction!
-
+            float x = (2.0f * (i + 0.5f) / (float)scene.width - 1.0) * imageAspectRatio * scale;
+            float y = (1.0f - 2.0f * (j + 0.5f) / (float)scene.height) * scale;
+                                                                  
+            auto dir = normalize(Vector3f{ x, y, -1.0f});
+            auto color = scene.castRay({ eye_pos, dir }, 0);
+            
+            framebuffer[m++] = color;
         }
         UpdateProgress(j / (float)scene.height);
     }
     UpdateProgress(1.f);
 
-    // save framebuffer to file
+    /// save framebuffer to file
+    /// PPM 格式按照行优先顺序写入，只要保证像素来源的数据是对齐的，PPM就可以正确解析像素数据
+    /// PPM 格式以左上角为起点，从左向右写入数据
     FILE* fp = fopen("binary.ppm", "wb");
     (void)fprintf(fp, "P6\n%d %d\n255\n", scene.width, scene.height);
     for (auto i = 0; i < scene.height * scene.width; ++i) {
