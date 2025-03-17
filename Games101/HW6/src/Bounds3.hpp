@@ -11,7 +11,7 @@
 
 class Bounds3
 {
-  public:
+public:
     Vector3f pMin, pMax; // two points to specify the bounding box
     Bounds3()
     {
@@ -46,7 +46,7 @@ class Bounds3
     }
 
     Vector3f Centroid() { return 0.5 * pMin + 0.5 * pMax; }
-    Bounds3 Intersect(const Bounds3& b)
+    Bounds3 Intersect(const Bounds3 &b)
     {
         return Bounds3(Vector3f(fmax(pMin.x, b.pMin.x), fmax(pMin.y, b.pMin.y),
                                 fmax(pMin.z, b.pMin.z)),
@@ -54,7 +54,7 @@ class Bounds3
                                 fmin(pMax.z, b.pMax.z)));
     }
 
-    Vector3f Offset(const Vector3f& p) const
+    Vector3f Offset(const Vector3f &p) const
     {
         Vector3f o = p - pMin;
         if (pMax.x > pMin.x)
@@ -66,7 +66,7 @@ class Bounds3
         return o;
     }
 
-    bool Overlaps(const Bounds3& b1, const Bounds3& b2)
+    bool Overlaps(const Bounds3 &b1, const Bounds3 &b2)
     {
         bool x = (b1.pMax.x >= b2.pMin.x) && (b1.pMin.x <= b2.pMax.x);
         bool y = (b1.pMax.y >= b2.pMin.y) && (b1.pMin.y <= b2.pMax.y);
@@ -74,37 +74,35 @@ class Bounds3
         return (x && y && z);
     }
 
-    bool Inside(const Vector3f& p, const Bounds3& b)
+    bool Inside(const Vector3f &p, const Bounds3 &b)
     {
         return (p.x >= b.pMin.x && p.x <= b.pMax.x && p.y >= b.pMin.y &&
                 p.y <= b.pMax.y && p.z >= b.pMin.z && p.z <= b.pMax.z);
     }
-    inline const Vector3f& operator[](int i) const
+    inline const Vector3f &operator[](int i) const
     {
         return (i == 0) ? pMin : pMax;
     }
 
-    inline bool IntersectP(const Ray& ray, const Vector3f& invDir,
-                           const std::array<int, 3>& dirisNeg) const;
+    inline bool IntersectP(const Ray &ray, const Vector3f &invDir,
+                           const std::array<int, 3> &dirisNeg) const;
 };
 
-
-
-inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
-                                const std::array<int, 3>& dirIsNeg) const
+inline bool Bounds3::IntersectP(const Ray &ray, const Vector3f &invDir,
+                                const std::array<int, 3> &dirIsNeg) const
 {
     if (!dotProduct(ray.direction, ray.direction))
     {
         return false;
     }
-    /// �����󽻼��� 
+    /// 光线求交计算
     Vector3f enterVec;
     Vector3f exitVec;
 
-    /// BVH�����ļ��ٽṹ�İ�Χ����һ��������Χ�У���ζ����ķ��߾��Ƕ�Ӧ��������
-    /// �����ʱ������߼��򻯣�ֻ��Ҫ��������ĳ��ά�ȣ�������Ҫ������ķ��ߣ����������ߵĽ���, ͨ�����߼��������ߵĽ������ּ���������󽻵�Ч��
-    const auto& origin = ray.origin;
-    const auto& direction = ray.direction;
+    /// BVH构建的加速结构的包围盒是一个轴对齐包围盒，意味着面的法线就是对应的坐标轴
+    /// 计算的时候进行逻辑简化，只需要单独计算某个维度，并不需要计算面的法线，并计算与线的交点, 通过法线计算面与线的交点这种计算会拖慢求交的效率
+    const auto &origin = ray.origin;
+    const auto &direction = ray.direction;
     {
         enterVec.x = (pMin.x - origin.x) * ray.direction_inv.x;
         exitVec.x = (pMax.x - origin.x) * ray.direction_inv.x;
@@ -133,10 +131,9 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
         {
             std::swap(enterVec.z, exitVec.z);
         }
-
     }
     auto enter = std::max(std::max(enterVec.x, enterVec.y), enterVec.z);
-    auto exit  = std::min(std::min(exitVec.x, exitVec.y), exitVec.z);
+    auto exit = std::min(std::min(exitVec.x, exitVec.y), exitVec.z);
 
     if (enter < exit && exit > 0.0f)
     {
@@ -146,7 +143,7 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
     return false;
 }
 
-inline Bounds3 Union(const Bounds3& b1, const Bounds3& b2)
+inline Bounds3 Union(const Bounds3 &b1, const Bounds3 &b2)
 {
     Bounds3 ret;
     ret.pMin = Vector3f::Min(b1.pMin, b2.pMin);
@@ -154,7 +151,7 @@ inline Bounds3 Union(const Bounds3& b1, const Bounds3& b2)
     return ret;
 }
 
-inline Bounds3 Union(const Bounds3& b, const Vector3f& p)
+inline Bounds3 Union(const Bounds3 &b, const Vector3f &p)
 {
     Bounds3 ret;
     ret.pMin = Vector3f::Min(b.pMin, p);
