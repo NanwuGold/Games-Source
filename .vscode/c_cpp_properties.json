@@ -10,7 +10,7 @@
                 "/usr/include/opencv4/"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/g++",
+            "compilerPath": "g++",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-gcc-x64",
@@ -19,11 +19,10 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "D:/msys64/mingw64/include/c++/13.1.0"
+                "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "D:\\msys64\\mingw64\\bin\\g++.exe",
+            "compilerPath": "g++.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64",

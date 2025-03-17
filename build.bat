@@ -1,0 +1,6 @@
+@REM cmake .\Games101\HW1\src\ -B ./build/Games101/HW1 -GNinja -DCMAKE_BUILD_TYPE="Debug"
+@REM cmake .\Games101\HW2\src\ -B ./build/Games101/HW2 -GNinja -DCMAKE_BUILD_TYPE="Debug"
+@REM cmake .\Games101\HW3\src\ -B ./build/Games101/HW3 -GNinja -DCMAKE_BUILD_TYPE="Debug"
+@REM cmake .\Games101\HW4\src\ -B ./build/Games101/HW4 -GNinja -DCMAKE_BUILD_TYPE="Debug"
+@REM cmake .\Games101\HW5\src\ -B ./build/Games101/HW5 -GNinja -DCMAKE_BUILD_TYPE="Debug"
+cmake .\Games101\HW6\src\ -B ./build/Games101/HW6 -GNinja -DCMAKE_BUILD_TYPE="Debug"

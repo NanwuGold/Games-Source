@@ -83,6 +83,17 @@
         "titleBar.activeBackground": "#4D3E25",
         "titleBar.activeForeground": "#FCFBF9"
     },
+    "C_Cpp.errorSquiggles": "disabled",
     // "C_Cpp.intelliSenseCacheSize": 4096, // 增加缓存容量
     // "C_Cpp.autocompleteDelay": 200 // 降低补全延迟
+    "terminal.integrated.env.windows": {
+        "PATH": "${env:PATH}"
+    },
+    // "clangd.path": "C:/Program Files/LLVM/bin/clangd.exe",
+    // "clangd.arguments": [
+    //     "--header-insertion=never",
+    //     "--completion-style=detailed",
+    //     "--background-index"
+    // ],
+
 }
