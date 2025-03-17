@@ -75,7 +75,8 @@
         "bitset": "cpp",
         "__threading_support": "cpp",
         "locale": "cpp",
-        "print": "cpp"
+        "print": "cpp",
+        "cassert": "cpp"
     },
     "workbench.colorCustomizations": {
         "activityBar.background": "#372C1B",
