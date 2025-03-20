@@ -2,12 +2,15 @@
 // Created by goksu on 2/25/20.
 //
 
-#include <fstream>
-#include "Scene.hpp"
 #include "Renderer.hpp"
+#include "Scene.hpp"
+#include <fstream>
 #include <vector>
 
-inline float deg2rad(const float &deg) { return deg * M_PI / 180.0; }
+inline float deg2rad(const float &deg)
+{
+    return deg * M_PI / 180.0;
+}
 
 const float EPSILON = 0.00001;
 

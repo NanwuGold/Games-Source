@@ -2,7 +2,6 @@
 #include "Scene.hpp"
 #include "Triangle.hpp"
 #include "Vector.hpp"
-#include "global.hpp"
 #include <chrono>
 
 // In the main function of the program, we create the scene (create objects and

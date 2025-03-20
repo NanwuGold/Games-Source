@@ -1,7 +1,8 @@
-#include <algorithm>
-#include <cassert>
 #include "BVH.hpp"
 #include "Vector.hpp"
+#include <algorithm>
+#include <cassert>
+#include <unordered_map>
 
 BVHAccel::BVHAccel(std::vector<Object *> p, int maxPrimsInNode, SplitMethod splitMethod)
     : maxPrimsInNode(std::min(255, maxPrimsInNode)), splitMethod(splitMethod), primitives(std::move(p))
@@ -31,9 +32,134 @@ BVHAccel::BVHAccel(std::vector<Object *> p, int maxPrimsInNode, SplitMethod spli
     int mins = ((int)diff / 60) - (hrs * 60);
     int secs = (int)diff - (hrs * 3600) - (mins * 60);
 
-    printf(
-        "\rBVH Generation complete: \nTime Taken: %i hrs, %i mins, %i secs\n\n",
-        hrs, mins, secs);
+    printf("\rBVH Generation complete: \nTime Taken: %i hrs, %i mins, %i secs\n\n", hrs, mins, secs);
+}
+
+BVHBuildNode *BVHAccel::recursiveSHABuild(std::vector<Object *> objects)
+{
+    BVHBuildNode *node = new BVHBuildNode();
+
+    // Compute bounds of all primitives in BVH node
+    if (objects.size() == 1) ///< 只有一个元素的情况下 直接构建节点
+    {
+        node->object = objects[0];
+        node->left = nullptr;
+        node->right = nullptr;
+        node->bounds = objects[0]->getBounds();
+
+        return node;
+    } else if (objects.size() == 2) ///< 两个节点 直接分开存到两个叶子节点中
+    {
+        node->left = recursiveSHABuild({objects[0]});
+        node->right = recursiveSHABuild({objects[1]});
+        node->bounds = Union(objects[0]->getBounds(), objects[1]->getBounds());
+        return node;
+    } else
+    {
+        // 计算整个场景的包围盒
+        Bounds3 bounds = objects[0]->getBounds();
+        for (int i = 1; i < objects.size(); ++i)
+        {
+            bounds = Union(bounds, objects[i]->getBounds());
+        }
+
+        auto indexset = std::vector<int>{0, 1, 2}; /// x , y, z
+
+        /// 记录每个轴的分割平面的开销
+        std::vector<std::unordered_map<int, float>> axisCasts(3);
+
+        const int objectsNums = objects.size();
+        auto SareaA = bounds.SurfaceArea(); ///< 所有物体的包围盒的表面积
+
+        for (const auto index : indexset)
+        {
+            auto &castMap = axisCasts[index];
+            std::vector<Object *> copyObjects(objects);
+
+            std::sort(copyObjects.begin(), copyObjects.end(), [index](auto f1, auto f2) {
+                return (f1->getBounds().Centroid())[index] < (f2->getBounds().Centroid())[index];
+            });
+
+            /// 循环遍历分割
+            for (int left = 1; left < objectsNums; left++)
+            {
+                const auto Nleft = left;             ///< 左侧树的节点数目  -- 前N个分配给左子树
+                const auto Nright = objectsNums - Nleft; ///< 右侧树的节点数目 剩余部分分配给右子树
+
+                /// 左子树 节点包围盒
+                Bounds3 leftBox;
+                leftBox = copyObjects[0]->getBounds();
+                for (auto leftIndex = 1; leftIndex < Nleft; leftIndex++)
+                {
+                    leftBox = Union(leftBox, copyObjects[leftIndex]->getBounds());
+                }
+                /// 左子树 节点包围盒
+                Bounds3 rightBox = copyObjects[Nleft]->getBounds();
+                for (auto rightIndex = Nleft + 1; rightIndex < objectsNums; rightIndex++)
+                {
+                    rightBox = Union(rightBox, copyObjects[rightIndex]->getBounds());
+                }
+                /// 计算左右子树的表面积
+                auto SareaLeft = leftBox.SurfaceArea();
+                auto SareaRight = rightBox.SurfaceArea();
+
+                auto cast = 1.0f + (SareaLeft * Nleft + SareaRight * Nright) / SareaA;
+
+                /// 记录数目对应的开销
+                castMap.insert({left, cast});
+            }
+        }
+
+        /// 获取最小开销
+        [[maybe_unused]] auto XminumCast = std::min_element(
+            axisCasts[0].begin(), axisCasts[0].end(),
+            [](const std::pair<int, float> &p1, const std::pair<int, float> &p2) { return p1.second < p2.second; });
+
+        [[maybe_unused]] auto YminumCast = std::min_element(
+            axisCasts[1].begin(), axisCasts[1].end(),
+            [](const std::pair<int, float> &p1, const std::pair<int, float> &p2) { return p1.second < p2.second; });
+
+        [[maybe_unused]] auto ZminumCast = std::min_element(
+            axisCasts[2].begin(), axisCasts[2].end(),
+            [](const std::pair<int, float> &p1, const std::pair<int, float> &p2) { return p1.second < p2.second; });
+
+        int axisIndex = 0;
+        std::pair<int, float> res;
+        res = *XminumCast;
+        if (XminumCast->second < YminumCast->second && XminumCast->second < ZminumCast->second)
+        {
+            axisIndex = 0;
+            res = *XminumCast;
+        } else if (YminumCast->second < ZminumCast->second)
+        {
+            axisIndex = 1;
+            res = *YminumCast;
+        } else
+        {
+            axisIndex = 2;
+            res = *ZminumCast;
+        }
+
+        std::sort(objects.begin(), objects.end(), [index = axisIndex](auto f1, auto f2) {
+            return (f1->getBounds().Centroid())[index] < (f2->getBounds().Centroid())[index];
+        });
+
+        auto beginning = objects.begin();
+        auto middling = objects.begin() + res.first;
+        auto ending = objects.end();
+
+        auto leftshapes = std::vector<Object *>(beginning, middling); ///< 左闭右开原则
+        auto rightshapes = std::vector<Object *>(middling, ending);
+
+        assert(objects.size() == (leftshapes.size() + rightshapes.size()));
+
+        node->left = recursiveSHABuild(leftshapes);
+        node->right = recursiveSHABuild(rightshapes);
+
+        node->bounds = Union(node->left->bounds, node->right->bounds);
+    }
+
+    return node;
 }
 
 BVHBuildNode *BVHAccel::recursiveBuild(std::vector<Object *> objects)
@@ -57,16 +183,14 @@ BVHBuildNode *BVHAccel::recursiveBuild(std::vector<Object *> objects)
         node->left = nullptr;
         node->right = nullptr;
         return node;
-    }
-    else if (objects.size() == 2) ///< 存在多个物体 则继续创建节点
+    } else if (objects.size() == 2) ///< 存在多个物体 则继续创建节点
     {
         node->left = recursiveBuild(std::vector{objects[0]});
         node->right = recursiveBuild(std::vector{objects[1]});
 
         node->bounds = Union(node->left->bounds, node->right->bounds);
         return node;
-    }
-    else
+    } else
     {
         Bounds3 centroidBounds;
         for (int i = 0; i < objects.size(); ++i)
@@ -79,16 +203,16 @@ BVHBuildNode *BVHAccel::recursiveBuild(std::vector<Object *> objects)
         switch (dim)
         {
         case 0: ///< 切 X 方向
-            std::sort(objects.begin(), objects.end(), [](auto f1, auto f2)
-                      { return f1->getBounds().Centroid().x < f2->getBounds().Centroid().x; });
+            std::sort(objects.begin(), objects.end(),
+                      [](auto f1, auto f2) { return f1->getBounds().Centroid().x < f2->getBounds().Centroid().x; });
             break;
         case 1: ///< 切 Y 方向
-            std::sort(objects.begin(), objects.end(), [](auto f1, auto f2)
-                      { return f1->getBounds().Centroid().y < f2->getBounds().Centroid().y; });
+            std::sort(objects.begin(), objects.end(),
+                      [](auto f1, auto f2) { return f1->getBounds().Centroid().y < f2->getBounds().Centroid().y; });
             break;
         case 2: ///< 切 Z 方向
-            std::sort(objects.begin(), objects.end(), [](auto f1, auto f2)
-                      { return f1->getBounds().Centroid().z < f2->getBounds().Centroid().z; });
+            std::sort(objects.begin(), objects.end(),
+                      [](auto f1, auto f2) { return f1->getBounds().Centroid().z < f2->getBounds().Centroid().z; });
             break;
         }
 
@@ -110,11 +234,6 @@ BVHBuildNode *BVHAccel::recursiveBuild(std::vector<Object *> objects)
     return node;
 }
 
-BVHBuildNode *BVHAccel::recursiveSHABuild(std::vector<Object *> objects)
-{
-    return nullptr;
-}
-
 Intersection BVHAccel::Intersect(const Ray &ray) const
 {
     Intersection isect;
@@ -134,8 +253,7 @@ Intersection BVHAccel::getIntersection(BVHBuildNode *node, const Ray &ray) const
     const auto &[x, y, z] = ray.direction;
     if (node->bounds.IntersectP(ray, ray.direction_inv, {int(x > 0), int(y > 0), int(z > 0)}))
     {
-        if (auto obj = node->object;
-            !(node->left) && !(node->right) && obj) /// 此时是一个叶子节点 -- 存储数据 计算求交
+        if (auto obj = node->object; !(node->left) && !(node->right) && obj) /// 此时是一个叶子节点 -- 存储数据 计算求交
         {
             return obj->getIntersection(ray);
         }
@@ -146,8 +264,7 @@ Intersection BVHAccel::getIntersection(BVHBuildNode *node, const Ray &ray) const
         if (hit_1.distance < hit_2.distance)
         {
             return hit_1;
-        }
-        else
+        } else
         {
             return hit_2;
         }
