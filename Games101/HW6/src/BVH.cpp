@@ -66,47 +66,51 @@ BVHBuildNode *BVHAccel::recursiveSHABuild(std::vector<Object *> objects)
         auto indexset = std::vector<int>{0, 1, 2}; /// x , y, z
 
         /// 记录每个轴的分割平面的开销
-        std::vector<std::unordered_map<int, float>> axisCasts(3);
-
+        std::vector<std::unordered_map<int, float>> axisCasts(3);   ///< 考虑直接使用 std::vector
         const int objectsNums = objects.size();
-        auto SareaA = bounds.SurfaceArea(); ///< 所有物体的包围盒的表面积
 
         for (const auto index : indexset)
         {
             auto &castMap = axisCasts[index];
             std::vector<Object *> copyObjects(objects);
 
+            /// 根据当前面计算候选分割面 - 按照质心坐标排序
             std::sort(copyObjects.begin(), copyObjects.end(), [index](auto f1, auto f2) {
                 return (f1->getBounds().Centroid())[index] < (f2->getBounds().Centroid())[index];
             });
 
-            /// 循环遍历分割
-            for (int left = 1; left < objectsNums; left++)
+            /// 计算前缀包围盒
+            std::vector<Bounds3> leftBounds(objectsNums);
+            leftBounds[0] = copyObjects[0]->getBounds();
+            for (auto index = 1; index < objectsNums; index++)
             {
-                const auto Nleft = left;             ///< 左侧树的节点数目  -- 前N个分配给左子树
-                const auto Nright = objectsNums - Nleft; ///< 右侧树的节点数目 剩余部分分配给右子树
+                leftBounds[index] = Union(leftBounds[index - 1], copyObjects[index]->getBounds());
+            }
 
-                /// 左子树 节点包围盒
-                Bounds3 leftBox;
-                leftBox = copyObjects[0]->getBounds();
-                for (auto leftIndex = 1; leftIndex < Nleft; leftIndex++)
-                {
-                    leftBox = Union(leftBox, copyObjects[leftIndex]->getBounds());
-                }
-                /// 左子树 节点包围盒
-                Bounds3 rightBox = copyObjects[Nleft]->getBounds();
-                for (auto rightIndex = Nleft + 1; rightIndex < objectsNums; rightIndex++)
-                {
-                    rightBox = Union(rightBox, copyObjects[rightIndex]->getBounds());
-                }
+            /// 计算后缀包围盒
+            std::vector<Bounds3> rightBounds(objectsNums);
+            leftBounds[objectsNums - 1] = copyObjects[objectsNums - 1]->getBounds();
+            for (auto index = objectsNums - 2; index >= 0; index--)
+            {
+                rightBounds[index] = Union(rightBounds[index + 1], copyObjects[index]->getBounds());
+            }
+
+            auto SareaA = leftBounds[objectsNums - 1].SurfaceArea(); ///< 所有物体的包围盒的表面积
+
+            /// 循环遍历分割
+            for (int left = 0; left < objectsNums - 1; left++)
+            {
+                const auto Nleft = left + 1;                 ///< 左侧树的节点数目  -- 前N个分配给左子树(N  < objectsNums,总数)
+                const auto Nright = objectsNums - Nleft;     ///< 右侧树的节点数目 剩余部分分配给右子树
+
                 /// 计算左右子树的表面积
-                auto SareaLeft = leftBox.SurfaceArea();
-                auto SareaRight = rightBox.SurfaceArea();
+                auto SareaLeft = leftBounds[left].SurfaceArea();
+                auto SareaRight = rightBounds[left + 1].SurfaceArea();
 
                 auto cast = 1.0f + (SareaLeft * Nleft + SareaRight * Nright) / SareaA;
 
                 /// 记录数目对应的开销
-                castMap.insert({left, cast});
+                castMap.insert({Nleft, cast});
             }
         }
 
