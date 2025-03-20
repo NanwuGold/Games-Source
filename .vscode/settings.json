@@ -75,13 +75,33 @@
         "bitset": "cpp",
         "__threading_support": "cpp",
         "locale": "cpp",
-        "print": "cpp"
+        "print": "cpp",
+        "cassert": "cpp"
     },
     "workbench.colorCustomizations": {
         "activityBar.background": "#372C1B",
         "titleBar.activeBackground": "#4D3E25",
         "titleBar.activeForeground": "#FCFBF9"
     },
+    "C_Cpp.errorSquiggles": "disabled",
     // "C_Cpp.intelliSenseCacheSize": 4096, // 增加缓存容量
     // "C_Cpp.autocompleteDelay": 200 // 降低补全延迟
+    "terminal.integrated.env.windows": {
+        "PATH": "${env:PATH}"
+    },
+    "clangd.path": "clangd.exe",
+    "clangd.arguments": [
+        "--header-insertion=never",
+        "--completion-style=detailed",
+        "--background-index",
+        "--query-driver=clang++.exe",
+        "--clang-tidy",
+        "--compile-commands-dir=${workspaceFolder}/build/Games101/HW6"
+    ],
+    "cmake.languageSupport.enableFileAPI": true,
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.autocomplete": "disabled",
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+
 }

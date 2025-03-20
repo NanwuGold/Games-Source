@@ -17,7 +17,7 @@
             "MIMode": "gdb"
         },
         {
-            "name": "RayTracing",
+            "name": "RayTracing-H5",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/Games101/HW5/RayTracing",
@@ -27,7 +27,29 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb"
+        },
+        {
+            "name": "RayTracing-H6",
+            "type": "cppdbg",
+            // "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Games101/HW6/RayTracing",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/Games101/HW6/",
+            "environment": [],
+            "setupCommands": [
+                {
+                    "description": "启用STL美化打印, 辅助显示监视信息",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "windows": {
+                "miDebuggerPath": "gdb.exe",
+            }
         }
-
     ]
 }

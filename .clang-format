@@ -1,0 +1,16 @@
+BasedOnStyle: LLVM
+Language: Cpp
+IndentWidth: 4
+AccessModifierOffset: -4
+AlignOperands: true
+AllowShortFunctionsOnASingleLine: InlineOnly
+ColumnLimit: 120
+
+AlignEscapedNewlines: Right
+BreakBeforeBraces: Custom  # 启用自定义大括号换行[1,5](@ref)
+BraceWrapping:
+    AfterClass: true         # 类定义后换行
+    AfterFunction: true      # 函数定义后换行
+    AfterNamespace: true     # 命名空间后换行
+    AfterControlStatement: Always    # 控制语句（if/for）多行时换行[2](@ref)
+    SplitEmptyFunction: true
