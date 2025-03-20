@@ -31,6 +31,7 @@
         {
             "name": "RayTracing-H6",
             "type": "cppdbg",
+            // "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/build/Games101/HW6/RayTracing",
             "args": [],
@@ -45,7 +46,10 @@
                 }
             ],
             "externalConsole": false,
-            "MIMode": "gdb"
+            "MIMode": "gdb",
+            "windows": {
+                "miDebuggerPath": "gdb.exe",
+            }
         }
     ]
 }
