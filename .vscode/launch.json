@@ -50,6 +50,29 @@
             "windows": {
                 "miDebuggerPath": "gdb.exe",
             }
+        },
+        {
+            "name": "RayTracing-H7",
+            "type": "cppdbg",
+            // "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Games101/HW7/RayTracing",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/Games101/HW7/",
+            "environment": [],
+            "setupCommands": [
+                {
+                    "description": "启用STL美化打印, 辅助显示监视信息",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "windows": {
+                "miDebuggerPath": "gdb.exe",
+            }
         }
     ]
 }

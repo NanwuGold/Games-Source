@@ -96,7 +96,7 @@
         "--background-index",
         "--query-driver=clang++.exe",
         "--clang-tidy",
-        "--compile-commands-dir=${workspaceFolder}/build/Games101/HW6"
+        "--compile-commands-dir=${workspaceFolder}/build/Games101/HW7"
     ],
     "cmake.languageSupport.enableFileAPI": true,
     "C_Cpp.intelliSenseEngine": "disabled",
