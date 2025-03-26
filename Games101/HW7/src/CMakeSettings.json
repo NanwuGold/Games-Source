@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+        "name": "x64-Debug",
+        "generator": "Ninja",
+        "configurationType": "Debug",
+        "inheritEnvironments": [ "msvc_x64_x64" ],
+        "buildRoot": "${projectDir}\\..\\..\\..\\build\\Games101\\HW7\\${name}",
+        "cmakeCommandArgs": "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "buildCommandArgs": "",
+        "ctestCommandArgs": "",
+        "intelliSenseMode": "windows-msvc-x64"
+    },
+    {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${projectDir}\\..\\..\\..\\build\\Games101\\HW7\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "intelliSenseMode": "windows-msvc-x64"
+    }
+  ]
+}
