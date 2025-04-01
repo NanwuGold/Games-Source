@@ -61,52 +61,52 @@ bool Scene::trace(
 Vector3f Scene::castRay(const Ray &ray, int depth) const
 {
     /// 只计算 直接光照 -- 假设不存在遮挡
-    auto raySect = intersect(ray);  ///< 获取光线和场景的交点
+    auto shadingPointInter = intersect(ray);  ///< 获取光线和场景的交点
 
     Vector3f L_dir = {0.0};
+
     /// 没有打到场景的任何物体 -- 包括光源
-    if(!raySect.happened)
+    if(!shadingPointInter.happened)
     {
-        return L_dir;
+        return backgroundColor;  /// 直接着色为背景色
     }
 
-    /// 打到光源
-    if(raySect.m->hasEmission())
+    if(shadingPointInter.obj->hasEmit() && depth == 0)
     {
-        if(depth == 0)  /// 第一次
-        {
-            return raySect.m->getEmission();
-        }
-        else
-        {
-            return L_dir;
-        }
+        return shadingPointInter.m->getEmission();
     }
 
-    auto p = raySect.coords;  /// 交点
-    auto N = raySect.normal.normalized();  /// 交点的法线
-    auto w_o = ray.direction; w_o = w_o.normalized();
+    auto p = shadingPointInter.coords;  /// 交点
+    auto N = shadingPointInter.normal;  /// 交点的法线
+    auto w_o = normalize(-ray.direction);
 
     /// 获取采样光源的PDF
     /// 获取朝向光源的光线
-    auto XX = Intersection{};
-    float pdf_light = 0.0;
-    sampleLight(XX, pdf_light);
+    Intersection LightInter;
+    float pdf_light;
+    sampleLight(LightInter, pdf_light);
 
-    auto NN = XX.normal.normalized();
+    auto x = LightInter.coords;
+    auto dir = x - p;
+    auto dis = dir.norm();
+    auto dis_2 = dis * dis;
 
-    /// 着色点到光源的方向
-    auto w_s =  p - XX.coords;
+    auto w_s =  normalize(dis);  /// 着色点到光源的方向
+    auto NN = LightInter.normal;
+    auto emit = LightInter.emit;
 
-    auto dis_2 = dotProduct(w_s, w_s);
+    auto ray2Light = Ray(p, w_s);
 
-    w_s = w_s.normalized();
+    /// 计算是否光线被遮挡
+    auto lightBlackInter = intersect(ray2Light);
+    if((lightBlackInter.coords - x).norm() < EPSILON)
+    {
+        auto f_brdf = shadingPointInter.m->eval(w_s, w_o, N);
+        auto cos_theta =  std::max(0.0f,dotProduct(w_s, N));
+        auto cos_theta_light = std::max(0.0f,dotProduct(-w_s, NN));
 
-    auto emit = XX.emit; /// 光源的强度
-    auto f_brdf = raySect.m->eval(w_o, -w_s, N);
-    auto cos_theta =  dotProduct(-w_s, N);
-    auto cos_theta_light =  dotProduct(w_s, NN);
-    auto outres = emit * f_brdf * cos_theta * cos_theta_light / dis_2 / pdf_light;
-
-    return outres;
+        auto outres = emit * f_brdf * cos_theta * cos_theta_light / (dis_2 * pdf_light);
+        return outres;
+    }
+    return L_dir;
 }

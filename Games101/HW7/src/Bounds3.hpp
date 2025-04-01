@@ -141,7 +141,7 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
     auto enter = std::max(std::max(enterVec.x, enterVec.y), enterVec.z);
     auto exit = std::min(std::min(exitVec.x, exitVec.y), exitVec.z);
 
-    if (enter < exit && exit > 0.0f)
+    if (enter <= exit && exit >= 0.0f)
     {
         return true;
     }
