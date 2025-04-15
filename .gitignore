@@ -1,4 +1,13 @@
+
+# Visual Studio
 build/
 .vs/
+
+# Clion
 .idea/
+
+# Clang
 .cache/
+
+# others
+out/

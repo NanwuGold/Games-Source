@@ -102,6 +102,9 @@
     "C_Cpp.intelliSenseEngine": "disabled",
     "C_Cpp.autocomplete": "disabled",
     "editor.formatOnSave": false,
-    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+    "cSpell.words": [
+        "CLion"
+    ]
 
 }

@@ -131,5 +131,8 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
             L_indir = castRay(in_ray, depth + 1) * shadingPointInter.m->eval(w_o, w_i, N) * dotProduct(w_i, N) / (pdf * RussianRoulette);
         }
     }
+
+    /// TODO: implement Microfacet BRDF
+
     return L_dir + L_indir;
 }

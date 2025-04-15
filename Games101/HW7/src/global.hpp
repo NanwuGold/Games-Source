@@ -37,6 +37,10 @@ inline float get_random_float()
     return dist(rng);
 }
 
+/**
+ * @brief 更新进度条
+ * @param progress 进度
+ */
 inline void UpdateProgress(float progress)
 {
     int barWidth = 70;
